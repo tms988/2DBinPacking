@@ -1,8 +1,11 @@
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.geom.Arc2D;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,7 +20,11 @@ public class Main {
     int containerWidth;
     int containerHeight;
     List<Box> boxesDescription = new ArrayList<Box>();
+    List<Box> boxes = new ArrayList<Box>();
 
+    Slot container;
+    int nb_items = 0;
+    double usedSurface = 0.0;
     int nb_containers = 0;
     private int nb_rows = 0;
 
@@ -25,20 +32,22 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         new Main();
-        //Randomizer.printRandomBoxes(26000, 10, 300);
+        //Randomizer.printRandomBoxes(50000, 10, 300);
     }
 
     public void init() throws FileNotFoundException {
-                /*
+        /*
+
         JFileChooser fc = new JFileChooser();
         fc.setMultiSelectionEnabled(true);
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
         fc.showOpenDialog(null);
         if(fc.getSelectedFile() == null) return;
+        Parser.parse(fc.getSelectedFile().getAbsolutePath());
+
         */
 
-        //found.Parser.parse(fc.getSelectedFile().getAbsolutePath());
-        Parser.defineFilePath("C:\\Users\\ben\\Documents\\GitHub\\2DBinPacking\\src\\main\\resources\\f1.txt");
+        Parser.defineFilePath("C:\\Users\\ben\\Documents\\GitHub\\2DBinPacking\\src\\main\\resources\\f2.txt");
 
         Container containerDescription =  Parser.getContainer();
         containerWidth = containerDescription.width;
@@ -46,10 +55,13 @@ public class Main {
 
         boxesDescription = Parser.getBoxes();
 
-       // System.err.println("Container : " + containerDescription);
+        for(Box b : boxesDescription) {
+            this.boxes.add(b.clone());
+        }
+
+        this.nb_items = boxesDescription.size();
         Collections.sort(boxesDescription);
-       // System.err.println("List of boxes : " + boxesDescription);
-    }
+      }
 
     public Main() throws IOException {
         init();
@@ -59,13 +71,12 @@ public class Main {
         while(boxesDescription.size() != 0) {
             List<Box> boxesList = new ArrayList<Box>();
 
-            Slot container = new Slot(0, 0, containerWidth, containerHeight, 0);
+            container = new Slot(0, 0, containerWidth, containerHeight, 0);
 
             for (int i = 0 ; i < boxesDescription.size() ; i ++) {
                 Box b = boxesDescription.get(i);
                 if (b.width <= containerWidth && b.height <= containerHeight) {
                     Slot s = container.insert(b);
-
                     //  Pas pu insere
                     if (s == null) {
                         boxesList.add(b);
@@ -83,10 +94,21 @@ public class Main {
             this.containersFull.add(new BoxPanel(boxDraws));
         }
         this.elapsedTime = TimeUnit.MILLISECONDS.convert(System.nanoTime() - dateD, TimeUnit.NANOSECONDS);
+
+        this.usedSurface = 0;
+        for(Box b : this.boxes) {
+            usedSurface += b.surface();
+        }
+
+        int totalSurface = this.containersFull.size() * container.surface();
+
+        System.out.println(((double) usedSurface *100) / ((double) totalSurface));
+        usedSurface = ((double) usedSurface *100) / ((double) totalSurface);
+
+
         drawContainers();
-
-
     }
+
     public void drawContainers() {
 
         JPanel mainPanel = new JPanel();
@@ -113,7 +135,13 @@ public class Main {
         mainFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         mainFrame.setLocationRelativeTo(null);
         mainFrame.setLocation(0, 0);
-        mainFrame.setTitle("Container : " + this.containerWidth + "x" + this.containerHeight + " - " + this.containersFull.size() + " boites utilisées - Temps de calcul : " + elapsedTime + "ms");
+
+        DecimalFormat df = new DecimalFormat("#.###");
+        df.setRoundingMode(RoundingMode.UP);
+        String lol = df.format(usedSurface);
+
+        mainFrame.setTitle(this.nb_items + " items - " + "Container : " + this.containerWidth + "x" + this.containerHeight + " - " + this.containersFull.size()
+                + " containers  utilisées - " +lol + "% surface occupée - Temps de calcul : " + elapsedTime + "ms");
         mainFrame.getContentPane().add(new JScrollPane(mainPanel), BorderLayout.CENTER);
         mainFrame.setVisible(true);
     }

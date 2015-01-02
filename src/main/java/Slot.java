@@ -40,6 +40,20 @@ public class Slot {
         return width * height;
     }
 
+    int usedSurface() {
+        int surface = 0;
+        if(item != null)
+            surface = surface();
+
+        if(leftSon != null)
+            surface += leftSon.usedSurface();
+
+        if(rightSon != null)
+            surface += rightSon.usedSurface();
+
+        return surface;
+    }
+
     boolean canFit(Box b) {
         return width >= b.width && height >= b.height;
     }

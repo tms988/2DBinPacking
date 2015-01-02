@@ -18,10 +18,10 @@ public class Box implements Comparable {
     @Override
     public int compareTo(Object o) {
         Box b = (Box) o;
-        if(width > b.width) {
+        if(surface() > b.surface()) {
             return -1;
         }
-        else if(width < b.width) {
+        else if(surface() < b.surface()) {
             return 1;
         }
         else {
@@ -43,5 +43,8 @@ public class Box implements Comparable {
     public Box clone() {
         return new Box(width, height);
     }
-
+    @Override
+    public String toString() {
+        return "(" + width + ", " + height + ")";
+    }
 }
